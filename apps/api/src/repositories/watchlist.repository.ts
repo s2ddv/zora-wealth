@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@kryptonik/database";
+import type { PrismaClient } from "@zora-wealth/database";
 
 export class WatchlistRepository {
   constructor(private readonly db: PrismaClient) {}

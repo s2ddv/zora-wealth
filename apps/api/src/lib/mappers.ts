@@ -3,13 +3,13 @@ import type {
   Wallet,
   WalletAsset,
   Watchlist,
-} from "@kryptonik/database";
+} from "@zora-wealth/database";
 import type {
   PortfolioSnapshotDto,
   WalletAssetDto,
   WalletDto,
   WatchlistItemDto,
-} from "@kryptonik/shared";
+} from "@zora-wealth/shared";
 
 export function toWalletAssetDto(asset: WalletAsset): WalletAssetDto {
   return {

@@ -1,5 +1,5 @@
 import { prisma } from "../lib/prisma.js";
-import { Chain } from "@prisma/client";
+import { Chain } from "@zora-wealth/database";
 
 export const walletRepository = {
   create(userId: string, address: string, chain: Chain, nickname?: string) {

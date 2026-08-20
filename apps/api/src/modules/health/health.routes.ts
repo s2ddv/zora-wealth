@@ -46,7 +46,7 @@ export const healthRoutes: FastifyPluginAsync = async (app) => {
 
       return {
         status: healthy ? "ok" : "degraded",
-        service: "kryptonik-api",
+        service: "zora-wealth-api",
         timestamp: new Date().toISOString(),
         checks: { database, redis },
       };

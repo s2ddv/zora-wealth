@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import type { CreateWalletInput } from "@kryptonik/shared";
+import type { CreateWalletInput } from "@zora-wealth/shared";
 import { WalletRepository } from "../../repositories/wallet.repository.js";
 import { WalletService } from "../wallet/wallet.service.js";
 import { toWalletDto } from "../../lib/mappers.js";
