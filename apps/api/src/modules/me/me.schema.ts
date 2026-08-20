@@ -16,10 +16,19 @@ export const walletIdParamsSchema = z.object({
 });
 
 export const createWatchlistSchema = z.object({
+  name: z.string().trim().min(1).max(64),
+});
+
+export const watchlistIdParamsSchema = z.object({
+  id: z.string().min(1),
+});
+
+export const addWatchlistItemSchema = z.object({
   coinId: z.string().trim().min(1).max(128),
 });
 
-export const watchlistCoinParamsSchema = z.object({
+export const watchlistItemParamsSchema = z.object({
+  id: z.string().min(1),
   coinId: z.string().min(1),
 });
 
@@ -33,4 +42,5 @@ export const snapshotQuerySchema = z.object({
 
 export type CreateWalletBody = z.infer<typeof createWalletSchema>;
 export type CreateWatchlistBody = z.infer<typeof createWatchlistSchema>;
+export type AddWatchlistItemBody = z.infer<typeof addWatchlistItemSchema>;
 export type CreateSnapshotBody = z.infer<typeof createSnapshotSchema>;

@@ -5,12 +5,14 @@ import { MeWalletsService } from "./me-wallets.service.js";
 import { MeWatchlistsService } from "./me-watchlists.service.js";
 import { MePortfolioService } from "./me-portfolio.service.js";
 import {
+  addWatchlistItemSchema,
   createSnapshotSchema,
   createWalletSchema,
   createWatchlistSchema,
   snapshotQuerySchema,
   walletIdParamsSchema,
-  watchlistCoinParamsSchema,
+  watchlistIdParamsSchema,
+  watchlistItemParamsSchema,
 } from "./me.schema.js";
 
 export default async function meRoutes(fastify: FastifyInstance) {
@@ -110,8 +112,8 @@ export default async function meRoutes(fastify: FastifyInstance) {
     }
 
     try {
-      const item = await watchlistsService.add(userId, parsed.data.coinId);
-      return reply.status(201).send(item);
+      const watchlist = await watchlistsService.create(userId, parsed.data.name);
+      return reply.status(201).send(watchlist);
     } catch (err: unknown) {
       if (
         err &&
@@ -119,29 +121,89 @@ export default async function meRoutes(fastify: FastifyInstance) {
         "code" in err &&
         err.code === "P2002"
       ) {
-        return reply.status(409).send({ error: "Coin already in watchlist" });
+        return reply.status(409).send({ error: "Watchlist name already exists" });
       }
       throw err;
     }
   });
 
-  fastify.delete<{ Params: { coinId: string } }>(
-    "/v1/me/watchlists/:coinId",
+  fastify.delete<{ Params: { id: string } }>(
+    "/v1/me/watchlists/:id",
     async (request, reply) => {
       const userId = await auth(request, reply);
       if (!userId) return;
 
-      const params = watchlistCoinParamsSchema.safeParse(request.params);
+      const params = watchlistIdParamsSchema.safeParse(request.params);
       if (!params.success) {
-        return reply.status(400).send({ error: "Invalid coin id" });
+        return reply.status(400).send({ error: "Invalid watchlist id" });
       }
 
-      const removed = await watchlistsService.remove(
+      const removed = await watchlistsService.remove(params.data.id, userId);
+      if (!removed) {
+        return reply.status(404).send({ error: "Watchlist not found" });
+      }
+      return reply.status(204).send();
+    }
+  );
+
+  fastify.post<{ Params: { id: string } }>(
+    "/v1/me/watchlists/:id/items",
+    async (request, reply) => {
+      const userId = await auth(request, reply);
+      if (!userId) return;
+
+      const params = watchlistIdParamsSchema.safeParse(request.params);
+      if (!params.success) {
+        return reply.status(400).send({ error: "Invalid watchlist id" });
+      }
+
+      const parsed = addWatchlistItemSchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.flatten() });
+      }
+
+      try {
+        const item = await watchlistsService.addItem(
+          params.data.id,
+          userId,
+          parsed.data.coinId
+        );
+        if (!item) {
+          return reply.status(404).send({ error: "Watchlist not found" });
+        }
+        return reply.status(201).send(item);
+      } catch (err: unknown) {
+        if (
+          err &&
+          typeof err === "object" &&
+          "code" in err &&
+          err.code === "P2002"
+        ) {
+          return reply.status(409).send({ error: "Coin already in watchlist" });
+        }
+        throw err;
+      }
+    }
+  );
+
+  fastify.delete<{ Params: { id: string; coinId: string } }>(
+    "/v1/me/watchlists/:id/items/:coinId",
+    async (request, reply) => {
+      const userId = await auth(request, reply);
+      if (!userId) return;
+
+      const params = watchlistItemParamsSchema.safeParse(request.params);
+      if (!params.success) {
+        return reply.status(400).send({ error: "Invalid params" });
+      }
+
+      const removed = await watchlistsService.removeItem(
+        params.data.id,
         userId,
         params.data.coinId
       );
       if (!removed) {
-        return reply.status(404).send({ error: "Watchlist item not found" });
+        return reply.status(404).send({ error: "Watchlist or item not found" });
       }
       return reply.status(204).send();
     }

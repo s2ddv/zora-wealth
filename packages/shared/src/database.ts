@@ -48,8 +48,24 @@ export interface WalletDto {
 export interface WatchlistItemDto {
   id: string;
   coinId: string;
+  addedAt: string;
+}
+
+export interface WatchlistDto {
+  id: string;
+  name: string;
   userId: string;
+  items: WatchlistItemDto[];
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateWatchlistInput {
+  name: string;
+}
+
+export interface AddWatchlistItemInput {
+  coinId: string;
 }
 
 export interface PortfolioSnapshotDto {
@@ -63,10 +79,6 @@ export interface CreateWalletInput {
   address: string;
   chain?: Chain;
   nickname?: string | undefined;
-}
-
-export interface CreateWatchlistInput {
-  coinId: string;
 }
 
 export interface CreatePortfolioSnapshotInput {

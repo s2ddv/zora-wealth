@@ -3,11 +3,13 @@ import type {
   Wallet,
   WalletAsset,
   Watchlist,
+  WatchlistItem,
 } from "@zora-wealth/database";
 import type {
   PortfolioSnapshotDto,
   WalletAssetDto,
   WalletDto,
+  WatchlistDto,
   WatchlistItemDto,
 } from "@zora-wealth/shared";
 
@@ -36,12 +38,24 @@ export function toWalletDto(
   };
 }
 
-export function toWatchlistItemDto(item: Watchlist): WatchlistItemDto {
+export function toWatchlistItemDto(item: WatchlistItem): WatchlistItemDto {
   return {
     id: item.id,
     coinId: item.coinId,
-    userId: item.userId,
-    createdAt: item.createdAt.toISOString(),
+    addedAt: item.addedAt.toISOString(),
+  };
+}
+
+export function toWatchlistDto(
+  watchlist: Watchlist & { items: WatchlistItem[] }
+): WatchlistDto {
+  return {
+    id: watchlist.id,
+    name: watchlist.name,
+    userId: watchlist.userId,
+    items: watchlist.items.map(toWatchlistItemDto),
+    createdAt: watchlist.createdAt.toISOString(),
+    updatedAt: watchlist.updatedAt.toISOString(),
   };
 }
 

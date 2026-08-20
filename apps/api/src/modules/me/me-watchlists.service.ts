@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { WatchlistRepository } from "../../repositories/watchlist.repository.js";
-import { toWatchlistItemDto } from "../../lib/mappers.js";
+import { toWatchlistDto, toWatchlistItemDto } from "../../lib/mappers.js";
 
 export class MeWatchlistsService {
   private readonly watchlistRepo: WatchlistRepository;
@@ -10,17 +10,33 @@ export class MeWatchlistsService {
   }
 
   async list(userId: string) {
-    const items = await this.watchlistRepo.findByUserId(userId);
-    return items.map(toWatchlistItemDto);
+    const watchlists = await this.watchlistRepo.findAllByUserId(userId);
+    return watchlists.map(toWatchlistDto);
   }
 
-  async add(userId: string, coinId: string) {
-    const item = await this.watchlistRepo.create(userId, coinId);
+  async create(userId: string, name: string) {
+    const watchlist = await this.watchlistRepo.create(userId, name);
+    return toWatchlistDto(watchlist);
+  }
+
+  async remove(watchlistId: string, userId: string) {
+    const result = await this.watchlistRepo.delete(watchlistId, userId);
+    return result.count > 0;
+  }
+
+  async addItem(watchlistId: string, userId: string, coinId: string) {
+    const watchlist = await this.watchlistRepo.findById(watchlistId, userId);
+    if (!watchlist) return null;
+
+    const item = await this.watchlistRepo.addItem(watchlistId, coinId);
     return toWatchlistItemDto(item);
   }
 
-  async remove(userId: string, coinId: string) {
-    const result = await this.watchlistRepo.delete(userId, coinId);
+  async removeItem(watchlistId: string, userId: string, coinId: string) {
+    const watchlist = await this.watchlistRepo.findById(watchlistId, userId);
+    if (!watchlist) return false;
+
+    const result = await this.watchlistRepo.removeItem(watchlistId, coinId);
     return result.count > 0;
   }
 }

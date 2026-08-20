@@ -3,22 +3,50 @@ import type { PrismaClient } from "@zora-wealth/database";
 export class WatchlistRepository {
   constructor(private readonly db: PrismaClient) {}
 
-  findByUserId(userId: string) {
+  findAllByUserId(userId: string) {
     return this.db.watchlist.findMany({
       where: { userId },
+      include: { items: true },
       orderBy: { createdAt: "desc" },
     });
   }
 
-  create(userId: string, coinId: string) {
-    return this.db.watchlist.create({
-      data: { userId, coinId },
+  findById(id: string, userId: string) {
+    return this.db.watchlist.findFirst({
+      where: { id, userId },
+      include: { items: true },
     });
   }
 
-  delete(userId: string, coinId: string) {
+  create(userId: string, name: string) {
+    return this.db.watchlist.create({
+      data: { userId, name },
+      include: { items: true },
+    });
+  }
+
+  rename(id: string, userId: string, name: string) {
+    return this.db.watchlist.updateMany({
+      where: { id, userId },
+      data: { name },
+    });
+  }
+
+  delete(id: string, userId: string) {
     return this.db.watchlist.deleteMany({
-      where: { userId, coinId },
+      where: { id, userId },
+    });
+  }
+
+  addItem(watchlistId: string, coinId: string) {
+    return this.db.watchlistItem.create({
+      data: { coinId, watchlistId },
+    });
+  }
+
+  removeItem(watchlistId: string, coinId: string) {
+    return this.db.watchlistItem.deleteMany({
+      where: { coinId, watchlistId },
     });
   }
 }
