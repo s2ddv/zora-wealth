@@ -1,5 +1,4 @@
 import type { PrismaClient } from "@zora-wealth/database";
-import type { Prisma } from "@zora-wealth/database";
 
 export class WalletAssetRepository {
   constructor(private readonly db: PrismaClient) {}
@@ -10,34 +9,44 @@ export class WalletAssetRepository {
     });
   }
 
-  upsert(
+  async upsert(
     walletId: string,
     symbol: string,
     contractAddress: string | null,
-    amount: Prisma.Decimal | number | string,
-    usdValue?: Prisma.Decimal | number | string | null,
-    name?: string,
+    amount: number | string,
+    usdValue?: number | string | null,
+    name?: string | null,
   ) {
-    return this.db.walletAsset.upsert({
+    const normalizedName = name ?? null;
+    const normalizedUsdValue = usdValue ?? null;
+
+    const existing = await this.db.walletAsset.findFirst({
       where: {
-        walletId_symbol_contractAddress: {
-          walletId,
-          symbol,
-          contractAddress: contractAddress ?? "",
-        },
-      },
-      create: {
         walletId,
         symbol,
-        contractAddress,
-        amount,
-        usdValue,
-        name,
+        contractAddress: contractAddress ?? null,
       },
-      update: {
+    });
+
+    if (existing) {
+      return this.db.walletAsset.update({
+        where: { id: existing.id },
+        data: {
+          amount,
+          usdValue: normalizedUsdValue,
+          name: normalizedName,
+        },
+      });
+    }
+
+    return this.db.walletAsset.create({
+      data: {
+        walletId,
+        symbol,
+        contractAddress: contractAddress ?? null,
         amount,
-        usdValue,
-        name,
+        usdValue: normalizedUsdValue,
+        name: normalizedName,
       },
     });
   }

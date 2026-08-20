@@ -36,24 +36,25 @@ async function main() {
 
   await prisma.watchlist.upsert({
     where: {
-      userId_coinId: { userId: user.id, coinId: "bitcoin" },
+      userId_name: { userId: user.id, name: "Bitcoin" },
     },
     update: {},
-    create: { userId: user.id, coinId: "bitcoin" },
+    create: { userId: user.id, name: "Bitcoin" },
   });
 
   await prisma.watchlist.upsert({
     where: {
-      userId_coinId: { userId: user.id, coinId: "ethereum" },
+      userId_name: { userId: user.id, name: "Ethereum" },
     },
     update: {},
-    create: { userId: user.id, coinId: "ethereum" },
+    create: { userId: user.id, name: "Ethereum" },
   });
 
   await prisma.portfolioSnapshot.create({
     data: {
       userId: user.id,
       totalUsd: 12500.0,
+      source: "WALLET_REFRESH",
     },
   });
 

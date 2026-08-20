@@ -6,9 +6,13 @@ export {
   type Wallet,
   type WalletAsset,
   type Watchlist,
+  type WatchlistItem,
   type PortfolioSnapshot,
   type ExchangeConnection,
+  type SnapshotSource,
 } from "./generated/client/index.js";
+
+export * as Prisma from "@prisma/client";
 
 import { PrismaClient } from "./generated/client/index.js";
 

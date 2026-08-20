@@ -23,7 +23,7 @@ export class MeWalletsService {
       userId,
       address: input.address,
       chain: input.chain ?? "ETHEREUM",
-      nickname: input.nickname,
+      nickname: input.nickname ?? null,
     });
 
     await this.syncAssets(wallet.id, wallet.address, userId);

@@ -46,7 +46,7 @@ export class WatchlistRepository {
 
   removeItem(watchlistId: string, coinId: string) {
     return this.db.watchlistItem.deleteMany({
-      where: { coinId, watchlistId },
+      where: { watchlistId, coinId },
     });
   }
 }

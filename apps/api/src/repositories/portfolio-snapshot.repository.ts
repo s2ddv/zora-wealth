@@ -1,5 +1,4 @@
-import type { PrismaClient } from "@zora-wealth/database";
-import type { SnapshotSource } from "@zora-wealth/database";
+import type { PrismaClient, SnapshotSource } from "@zora-wealth/database";
 
 export class PortfolioSnapshotRepository {
   constructor(private readonly db: PrismaClient) {}
@@ -16,6 +15,10 @@ export class PortfolioSnapshotRepository {
       orderBy: { createdAt: "desc" },
       take: limit,
     });
+  }
+
+  findByUserId(userId: string, limit = 90) {
+    return this.findByUser(userId, limit);
   }
 
   findLatestByUser(userId: string) {

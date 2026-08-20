@@ -1,26 +1,34 @@
-import { prisma } from "../lib/prisma.js";
+import { randomUUID } from "node:crypto";
+import type { PrismaClient } from "@zora-wealth/database";
 
-export const userRepository = {
-  create(email: string, name?: string) {
-    return prisma.user.create({
-      data: { email, name },
+export class UserRepository {
+  constructor(private readonly db: PrismaClient) {}
+
+  create(data: { id?: string; email: string; name?: string | null; authId: string }) {
+    return this.db.user.create({
+      data: {
+        id: data.id ?? randomUUID(),
+        email: data.email,
+        name: data.name ?? null,
+        authId: data.authId,
+      },
     });
-  },
+  }
 
   findByEmail(email: string) {
-    return prisma.user.findUnique({
+    return this.db.user.findUnique({
       where: { email },
     });
-  },
+  }
 
   findById(id: string) {
-    return prisma.user.findUnique({
+    return this.db.user.findUnique({
       where: { id },
     });
-  },
+  }
 
   findByIdWithRelations(id: string) {
-    return prisma.user.findUnique({
+    return this.db.user.findUnique({
       where: { id },
       include: {
         wallets: true,
@@ -28,5 +36,5 @@ export const userRepository = {
         exchangeConnections: true,
       },
     });
-  },
-};
+  }
+}

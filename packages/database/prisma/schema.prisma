@@ -4,8 +4,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum Chain {
@@ -24,84 +25,129 @@ enum Exchange {
   BYBIT
 }
 
+enum SnapshotSource {
+  WALLET_REFRESH
+  SCHEDULED
+  MANUAL
+}
+
 model User {
-  id         String   @id @default(cuid())
-  authId     String   @unique   
-  email      String   @unique
-  name       String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authId String @unique
 
   wallets             Wallet[]
   watchlists          Watchlist[]
   snapshots           PortfolioSnapshot[]
   exchangeConnections ExchangeConnection[]
+
+  @@map("users")
 }
 
 model Wallet {
-  id        String   @id @default(cuid())
-  address   String
-  chain     Chain    @default(ETHEREUM)
-  nickname  String?
-  userId    String
+  id       String  @id @default(uuid())
+  address  String
+  chain    Chain
+  nickname String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  assets WalletAsset[]
+
+  lastSyncedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  assets WalletAsset[]
-
   @@unique([userId, address, chain])
   @@index([userId])
+  @@map("wallets")
 }
 
 model WalletAsset {
-  id         String   @id @default(cuid())
-  walletId   String
-  symbol     String
-  amount     Decimal  @db.Decimal(38, 18)
-  usdValue   Decimal? @db.Decimal(18, 2)
-  updatedAt  DateTime @updatedAt
+  id     String  @id @default(uuid())
+  symbol String
+  name   String?
 
-  wallet     Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  contractAddress String?
 
-  @@unique([walletId, symbol])
+  amount   Decimal  @db.Decimal(38, 18)
+  usdValue Decimal? @db.Decimal(18, 2)
+
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([walletId, symbol, contractAddress])
   @@index([walletId])
+  @@map("wallet_assets")
 }
 
 model Watchlist {
-  id        String   @id @default(cuid())
-  coinId    String
-  userId    String
+  id   String @id @default(uuid())
+  name String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  items WatchlistItem[]
+
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, coinId])
+  @@unique([userId, name])
   @@index([userId])
+  @@map("watchlists")
+}
+
+model WatchlistItem {
+  id     String @id @default(uuid())
+  coinId String
+
+  watchlistId String
+  watchlist   Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+
+  addedAt DateTime @default(now())
+
+  @@unique([watchlistId, coinId])
+  @@index([watchlistId])
+  @@map("watchlist_items")
 }
 
 model PortfolioSnapshot {
-  id        String   @id @default(cuid())
-  totalUsd  Decimal  @db.Decimal(20, 2)
-  userId    String
+  id       String         @id @default(uuid())
+  totalUsd Decimal        @db.Decimal(18, 2)
+  source   SnapshotSource @default(WALLET_REFRESH)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@index([userId, createdAt])
+  @@map("portfolio_snapshots")
 }
 
 model ExchangeConnection {
-  id              String   @id @default(cuid())
-  exchange        Exchange
+  id       String   @id @default(uuid())
+  exchange Exchange
+
   encryptedKey    String
   encryptedSecret String
-  userId          String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, exchange])
   @@index([userId])
+  @@map("exchange_connections")
 }
