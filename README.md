@@ -1,8 +1,8 @@
-# Zora
+# Zora Wealth
 
 > A unified platform for tracking your complete wealth across investments and cryptocurrency.
 
-Zora is a modern wealth aggregation platform that brings together traditional investments and digital assets into a single, intuitive dashboard. By connecting brokers, exchanges, and crypto wallets, users gain a complete view of their net worth without jumping between multiple platforms.
+Zora Wealth is a modern platform that brings together traditional investments and digital assets into a single, intuitive dashboard. By connecting brokers, exchanges, and crypto wallets, users gain a complete view of their net worth without jumping between multiple platforms.
 
 ## Overview
 
