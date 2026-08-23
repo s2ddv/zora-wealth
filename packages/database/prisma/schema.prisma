@@ -32,7 +32,7 @@ enum SnapshotSource {
 }
 
 model User {
-  id        String   @id
+  id        String   @id @default(uuid())
   email     String   @unique
   name      String?
   createdAt DateTime @default(now())
@@ -75,6 +75,7 @@ model WalletAsset {
   name   String?
 
   contractAddress String?
+  isNative        Boolean @default(false)
 
   amount   Decimal  @db.Decimal(38, 18)
   usdValue Decimal? @db.Decimal(18, 2)
@@ -84,7 +85,7 @@ model WalletAsset {
 
   updatedAt DateTime @updatedAt
 
-  @@unique([walletId, symbol, contractAddress])
+  @@unique([walletId, symbol])
   @@index([walletId])
   @@map("wallet_assets")
 }

@@ -1,5 +1,4 @@
 import fp from "fastify-plugin";
-import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 
@@ -67,7 +66,6 @@ export default fp(async (app: FastifyInstance) => {
           email: data.user.email || `user-${data.user.id}@supabase.local`,
         },
         create: {
-          id: randomUUID(),
           authId: data.user.id,
           email: data.user.email || `user-${data.user.id}@supabase.local`,
         },

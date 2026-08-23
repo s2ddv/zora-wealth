@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@zora-wealth/database";
+import type { PrismaClient, Prisma } from "@zora-wealth/database";
 
 export class WalletAssetRepository {
   constructor(private readonly db: PrismaClient) {}
@@ -9,44 +9,34 @@ export class WalletAssetRepository {
     });
   }
 
-  async upsert(
+  upsert(
     walletId: string,
     symbol: string,
-    contractAddress: string | null,
     amount: number | string,
-    usdValue?: number | string | null,
-    name?: string | null,
+    options?: {
+      contractAddress?: string | null;
+      isNative?: boolean;
+      usdValue?: number | string | null;
+      name?: string | null;
+    },
   ) {
-    const normalizedName = name ?? null;
-    const normalizedUsdValue = usdValue ?? null;
-
-    const existing = await this.db.walletAsset.findFirst({
+    return this.db.walletAsset.upsert({
       where: {
-        walletId,
-        symbol,
-        contractAddress: contractAddress ?? null,
+        walletId_symbol: { walletId, symbol },
       },
-    });
-
-    if (existing) {
-      return this.db.walletAsset.update({
-        where: { id: existing.id },
-        data: {
-          amount,
-          usdValue: normalizedUsdValue,
-          name: normalizedName,
-        },
-      });
-    }
-
-    return this.db.walletAsset.create({
-      data: {
+      create: {
         walletId,
         symbol,
-        contractAddress: contractAddress ?? null,
         amount,
-        usdValue: normalizedUsdValue,
-        name: normalizedName,
+        contractAddress: options?.contractAddress ?? null,
+        isNative: options?.isNative ?? false,
+        usdValue: options?.usdValue ?? null,
+        name: options?.name ?? null,
+      },
+      update: {
+        amount,
+        usdValue: options?.usdValue ?? null,
+        name: options?.name ?? null,
       },
     });
   }

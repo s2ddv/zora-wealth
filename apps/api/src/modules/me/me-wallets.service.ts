@@ -1,15 +1,18 @@
 import type { FastifyInstance } from "fastify";
 import type { CreateWalletInput } from "@zora-wealth/shared";
 import { WalletRepository } from "../../repositories/wallet.repository.js";
+import { WalletAssetRepository } from "../../repositories/wallet-asset.repository.js";
 import { WalletService } from "../wallet/wallet.service.js";
 import { toWalletDto } from "../../lib/mappers.js";
 
 export class MeWalletsService {
   private readonly walletRepo: WalletRepository;
+  private readonly walletAssetRepo: WalletAssetRepository;
   private readonly onChainService: WalletService;
 
   constructor(private readonly fastify: FastifyInstance) {
     this.walletRepo = new WalletRepository(fastify.prisma);
+    this.walletAssetRepo = new WalletAssetRepository(fastify.prisma);
     this.onChainService = new WalletService(fastify);
   }
 
@@ -25,9 +28,7 @@ export class MeWalletsService {
       chain: input.chain ?? "ETHEREUM",
       nickname: input.nickname ?? null,
     });
-
     await this.syncAssets(wallet.id, wallet.address, userId);
-
     const refreshed = await this.walletRepo.findByIdForUser(wallet.id, userId);
     return toWalletDto(refreshed!);
   }
@@ -40,9 +41,7 @@ export class MeWalletsService {
   async sync(id: string, userId: string) {
     const wallet = await this.walletRepo.findByIdForUser(id, userId);
     if (!wallet) return null;
-
     await this.syncAssets(wallet.id, wallet.address, userId);
-
     const refreshed = await this.walletRepo.findByIdForUser(id, userId);
     return refreshed ? toWalletDto(refreshed) : null;
   }
@@ -56,7 +55,9 @@ export class MeWalletsService {
 
     if (balance) {
       const ethAmount = (Number(balance) / 1e18).toString();
-      await this.walletRepo.upsertAsset(walletId, "ETH", ethAmount);
+      await this.walletAssetRepo.upsert(walletId, "ETH", ethAmount, {
+        isNative: true,
+      });
     }
   }
 }

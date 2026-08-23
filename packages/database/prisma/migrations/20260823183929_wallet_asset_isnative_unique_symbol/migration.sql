@@ -1,11 +1,49 @@
--- CreateEnum
-CREATE TYPE "Chain" AS ENUM ('ETHEREUM', 'POLYGON', 'ARBITRUM', 'BASE', 'SOLANA', 'BITCOIN');
+/*
+  Warnings:
 
--- CreateEnum
-CREATE TYPE "Exchange" AS ENUM ('COINBASE', 'BINANCE', 'KRAKEN', 'BYBIT');
+  - You are about to drop the `ExchangeConnection` table. If the table is not empty, all the data it contains will be lost.
+  - You are about to drop the `PortfolioSnapshot` table. If the table is not empty, all the data it contains will be lost.
+  - You are about to drop the `User` table. If the table is not empty, all the data it contains will be lost.
+  - You are about to drop the `Wallet` table. If the table is not empty, all the data it contains will be lost.
+  - You are about to drop the `WalletAsset` table. If the table is not empty, all the data it contains will be lost.
+  - You are about to drop the `Watchlist` table. If the table is not empty, all the data it contains will be lost.
 
+*/
 -- CreateEnum
 CREATE TYPE "SnapshotSource" AS ENUM ('WALLET_REFRESH', 'SCHEDULED', 'MANUAL');
+
+-- DropForeignKey
+ALTER TABLE "ExchangeConnection" DROP CONSTRAINT "ExchangeConnection_userId_fkey";
+
+-- DropForeignKey
+ALTER TABLE "PortfolioSnapshot" DROP CONSTRAINT "PortfolioSnapshot_userId_fkey";
+
+-- DropForeignKey
+ALTER TABLE "Wallet" DROP CONSTRAINT "Wallet_userId_fkey";
+
+-- DropForeignKey
+ALTER TABLE "WalletAsset" DROP CONSTRAINT "WalletAsset_walletId_fkey";
+
+-- DropForeignKey
+ALTER TABLE "Watchlist" DROP CONSTRAINT "Watchlist_userId_fkey";
+
+-- DropTable
+DROP TABLE "ExchangeConnection";
+
+-- DropTable
+DROP TABLE "PortfolioSnapshot";
+
+-- DropTable
+DROP TABLE "User";
+
+-- DropTable
+DROP TABLE "Wallet";
+
+-- DropTable
+DROP TABLE "WalletAsset";
+
+-- DropTable
+DROP TABLE "Watchlist";
 
 -- CreateTable
 CREATE TABLE "users" (
@@ -14,6 +52,7 @@ CREATE TABLE "users" (
     "name" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "authId" TEXT NOT NULL,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
@@ -38,6 +77,7 @@ CREATE TABLE "wallet_assets" (
     "symbol" TEXT NOT NULL,
     "name" TEXT,
     "contractAddress" TEXT,
+    "isNative" BOOLEAN NOT NULL DEFAULT false,
     "amount" DECIMAL(38,18) NOT NULL,
     "usdValue" DECIMAL(18,2),
     "walletId" TEXT NOT NULL,
@@ -95,6 +135,9 @@ CREATE TABLE "exchange_connections" (
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "users_authId_key" ON "users"("authId");
+
+-- CreateIndex
 CREATE INDEX "wallets_userId_idx" ON "wallets"("userId");
 
 -- CreateIndex
@@ -104,7 +147,7 @@ CREATE UNIQUE INDEX "wallets_userId_address_chain_key" ON "wallets"("userId", "a
 CREATE INDEX "wallet_assets_walletId_idx" ON "wallet_assets"("walletId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "wallet_assets_walletId_symbol_contractAddress_key" ON "wallet_assets"("walletId", "symbol", "contractAddress");
+CREATE UNIQUE INDEX "wallet_assets_walletId_symbol_key" ON "wallet_assets"("walletId", "symbol");
 
 -- CreateIndex
 CREATE INDEX "watchlists_userId_idx" ON "watchlists"("userId");

@@ -49,41 +49,4 @@ export class WalletRepository {
       where: { id, userId },
     });
   }
-
-  async upsertAsset(
-    walletId: string,
-    symbol: string,
-    amount: number | string,
-    usdValue?: number | string | null,
-    name?: string | null
-  ) {
-    const normalizedName = name ?? null;
-    const normalizedUsdValue = usdValue ?? null;
-
-    const existing = await this.db.walletAsset.findFirst({
-      where: { walletId, symbol, contractAddress: null },
-    });
-
-    if (existing) {
-      return this.db.walletAsset.update({
-        where: { id: existing.id },
-        data: {
-          amount,
-          usdValue: normalizedUsdValue,
-          name: normalizedName,
-        },
-      });
-    }
-
-    return this.db.walletAsset.create({
-      data: {
-        walletId,
-        symbol,
-        contractAddress: null,
-        amount,
-        usdValue: normalizedUsdValue,
-        name: normalizedName,
-      },
-    });
-  }
 }
