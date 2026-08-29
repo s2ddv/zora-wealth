@@ -1,0 +1,20 @@
+[package]
+name = "zora-api-rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = { version = "0.7.9", features = ["macros"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.53", features = ["macros", "rt-multi-thread", "signal"] }
+tower = "0.5"
+tower-http = { version = "0.5.2", features = ["cors", "trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+dotenvy = "0.15"
+redis = { version = "0.27.6", features = ["tokio-comp"] }
+sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid", "json"] }
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.10", features = ["serde", "v4"] }
+anyhow = "1.0"
