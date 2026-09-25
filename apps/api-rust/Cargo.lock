@@ -3346,9 +3346,11 @@ dependencies = [
  "chrono",
  "dotenvy",
  "garde",
+ "jsonwebtoken",
  "serde",
  "serde_json",
  "tokio",
+ "tower",
  "tower-http 0.7.1",
  "tracing",
  "tracing-subscriber",
@@ -3388,5 +3390,6 @@ dependencies = [
  "tokio",
  "url",
  "uuid",
+ "zora-application",
  "zora-domain",
 ]

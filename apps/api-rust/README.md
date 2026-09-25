@@ -57,3 +57,70 @@ Implement wallet → watchlist → wallet-asset → portfolio-snapshot →
 exchange-connection. Compose their repositories/services in the API entrypoint
 and consume the shared authenticated-user extractor in protected handlers.
 Never add transaction signing to the backend; signing remains client-side.
+
+## User and authentication
+
+The entity mirrors `packages/database/prisma/schema.prisma`, including required
+`authId`, nullable `name`, TEXT ids and millisecond timestamps. The repository
+implements lookup, creation, partial update (including explicit name clearing)
+and an atomic authentication upsert. Authentication updates email only, keeping
+the existing local id and profile name. An absent email becomes
+`user-{authId}@supabase.local`, matching Fastify. Relation queries will be added
+with their respective domains; there is no profile route requiring them now.
+
+Set the same `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` as Fastify. For legacy
+HS256 projects, also set `SUPABASE_JWT_SECRET` from that Supabase project. For
+asymmetric signing, JWKS defaults to `/auth/v1/.well-known/jwks.json`; an explicit
+`SUPABASE_JWKS_URL` overrides it. Supported algorithms: HS256, RS256 and ES256.
+Signature, expiry, issuer, audience (`authenticated`) and subject are checked.
+JWKS is cached for five minutes; unknown key ids can trigger a refresh at most
+once every 30 seconds. Upstream requests have a five-second timeout.
+
+After local verification, `/auth/v1/user` is still consulted, as in Fastify's
+`auth.getUser(token)`, before synchronizing the current email. The service role
+key is only an upstream credential, never treated as a user JWT signing secret.
+The extractor inserts `AuthenticatedUser` into request extensions and returns
+the legacy 401 JSON errors. With Supabase configured, invalid tokens never fall
+back to a development user. Missing tokens can use `DEV_USER_ID` outside production.
+When Supabase is absent in development, `X-User-Id` and `DEV_USER_ID` preserve the
+legacy fallback. **Production fails startup without Supabase configuration**;
+this deliberately prevents Fastify's missing-configuration auth bypass.
+
+`garde` is available for the next domain's request validation. No invented user
+payload or HTTP validation contract is added in this stage.
+
+## Build and verify
+
+Run inside `apps/api-rust` so Cargo reads `.cargo/config.toml`:
+
+```sh
+cargo build --workspace --locked
+cargo clippy --workspace --all-targets --locked -- -D warnings
+cargo test --workspace --locked
+cargo fmt --all -- --check
+cargo run -p zora-api --bin export-types
+```
+
+Type generation writes `packages/shared/src/generated/rust/UserDto.ts`. It does
+not replace existing shared exports or require frontend changes. The DTO uses
+camelCase keys and UTC timestamps matching Prisma serialization. Test fixture
+private keys are intentionally public, test-only credentials.
+
+SQLx queries use `query_as!` and committed `.sqlx` metadata, generated against an
+isolated Postgres database initialized from the **current Prisma schema**. No
+live database or credentials are required for normal builds or Docker builds.
+Do not use the historical Prisma migrations to regenerate this cache: they do
+not represent the current schema completely. To refresh, initialize a disposable
+Postgres with the existing Prisma schema (`prisma db push --skip-generate`), then:
+
+```sh
+# DATABASE_URL must point to that disposable database, never production.
+cargo clean -p zora-infrastructure
+SQLX_OFFLINE=false SQLX_OFFLINE_DIR="$PWD/.sqlx" cargo build --workspace
+TEST_DATABASE_URL="$DATABASE_URL" cargo test -p zora-infrastructure --test user_repository -- --ignored
+```
+
+The integration test exercises creation, TEXT ids, nullable updates, uniqueness,
+email fallback and concurrent first-login upserts. It only deletes its own test
+users. Normal tests exercise HS256/ES256, JWKS, invalid claims and legacy auth
+errors against a local mock Supabase server.
