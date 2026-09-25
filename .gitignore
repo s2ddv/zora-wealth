@@ -11,3 +11,6 @@ packages/database/src/generated
 !.env.example
 *.log
 .DS_Store
+
+# Rust build artifacts
+/apps/api-rust/target/

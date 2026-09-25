@@ -1,0 +1,18 @@
+# docker compose -f docker-compose.yml -f apps/api-rust/compose.yml up --build api-rust
+services:
+  api-rust:
+    build:
+      context: ./apps/api-rust
+    env_file:
+      - ./apps/api-rust/.env
+    environment:
+      DATABASE_URL: postgresql://zora:zora@postgres:5432/zora
+      REDIS_URL: redis://redis:6379
+      PORT: 3334
+    ports:
+      - "3334:3334"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
