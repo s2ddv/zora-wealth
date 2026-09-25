@@ -80,7 +80,7 @@ export function Sidebar({ onAddAssets, onLogout }: SidebarProps) {
         <ul className="flex flex-col gap-1">
           <li>
             <Link
-              href="/dashboard/settings/profile"
+              href="/dashboard/settings#profile"
               className="flex items-center gap-3 rounded-2xl px-4 py-2 text-on-surface-variant transition-colors duration-200 hover:bg-surface-variant/50 hover:text-on-surface"
             >
               <span className="material-symbols-outlined">account_circle</span>

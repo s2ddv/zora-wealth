@@ -1,58 +1,20 @@
-"use client";
- 
-import { useNews } from "../../hooks/useNews";
- 
-function timeAgo(iso: string) {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 60) return `${mins}m`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h`;
-  return `${Math.floor(hours / 24)}d`;
-}
- 
-function SentimentDot({ sentiment = "neutral" as const }: { sentiment?: "up" | "down" | "neutral" | undefined }) {
-  const color =
-    sentiment === "up" ? "bg-green-400" : sentiment === "down" ? "bg-red-400" : "bg-brand-400";
-  return <span className={`inline-block w-1.5 h-1.5 rounded-full ${color}`} />;
-}
- 
-export function NewsCard() {
-  const { data, isLoading, isError } = useNews();
- 
+import { formatRelativeTime } from "@/lib/format";
+import type { NewsItemDto } from "@/types/dashboard";
+
+export function NewsCard({ item, referenceTime }: { item: NewsItemDto; referenceTime: number }) {
   return (
-    <div className="bg-neutral-900 rounded-xl p-6 h-full overflow-y-auto flex flex-col gap-4">
-      <h2 className="text-lg font-semibold text-neutral-100">News</h2>
- 
-      {isLoading && <p className="text-neutral-400 text-sm">Loading...</p>}
- 
-      {isError && (
-        <p className="text-red-400 text-sm">Failed to load news.</p>
-      )}
- 
-      {data && (
-        <ul className="divide-y divide-neutral-800">
-          {data.map((item) => (
-            <li key={item.id} className="py-3 first:pt-0 last:pb-0">
-              <a
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col gap-1 group"
-              >
-                <div className="flex items-center gap-2 text-[11px] text-neutral-500">
-                  <SentimentDot sentiment={item.sentiment} />
-                  <span className="uppercase tracking-wide">{item.source}</span>
-                  <span>· {timeAgo(item.publishedAt)}</span>
-                </div>
-                <p className="text-sm text-neutral-300 group-hover:text-brand-300 transition-colors leading-snug">
-                  {item.title}
-                </p>
-              </a>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <article className="h-full rounded-3xl border border-outline-variant/30 bg-surface-container p-6">
+      <div className="mb-5 flex flex-wrap items-center gap-3 text-body-sm text-on-surface-variant">
+        <span aria-hidden="true" className="material-symbols-outlined text-primary">{item.category === "crypto" ? "currency_bitcoin" : "public"}</span>
+        <span>{item.source}</span>
+        <time dateTime={item.publishedAt} title={item.publishedAt}>há {formatRelativeTime(item.publishedAt, referenceTime)}</time>
+      </div>
+      <h2 className="text-title-md font-semibold">
+        {item.url ? (
+          <a href={item.url} target="_blank" rel="noopener noreferrer" className="rounded hover:text-primary focus-visible:outline-2 focus-visible:outline-primary">{item.title}<span className="sr-only"> (abre em nova aba)</span></a>
+        ) : item.title}
+      </h2>
+      <span className="mt-5 inline-flex rounded-full bg-primary/10 px-3 py-1 text-body-sm text-primary">{item.category === "crypto" ? "Crypto" : "Macro"}</span>
+    </article>
   );
 }
